@@ -1,0 +1,42 @@
+name: Build Android APK
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Reorganize files
+        run: |
+          mkdir -p app/src/main/java/com/example/cineplay
+          mkdir -p app/src/main/res/values
+          
+          [ -f MainActivity.kt ] && mv MainActivity.kt app/src/main/java/com/example/cineplay/
+          [ -f AndroidManifest.xml ] && mv AndroidManifest.xml app/src/main/
+          
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper
+        
+      - name: Make Gradle executable
+        run: chmod +x ./gradlew
+        
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+        
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: CinePlay-TV-App
+          path: app/build/outputs/apk/debug/app-debug.apk
